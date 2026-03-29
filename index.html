@@ -1,1 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trastorno Bipolar · Atlas Clínico v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+--bg: #0D0D1A; --surface: #13132A; --surface2: #1A1A35; --border: #2A2A50;
+--muted: #6B6B9A; --light: #9898C8; --text: #E8E8F8; --text2: #B0B0D8;
+--active: #6C3FC8; --active-glow: rgba(108,63,200,0.3);
+}
+body { font-family: 'Crimson Pro', serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 520px; margin: 0 auto; overflow-x: hidden; }
+#header { background: linear-gradient(180deg, #0A0A18 0%, #13132A 100%); padding: 16px 16px 0; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--active); transition: border-color 0.4s; }
+.header-eyebrow { font-size: 9px; letter-spacing: 4px; color: var(--muted); font-family: monospace; margin-bottom: 4px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.header-title { font-family: 'Cinzel', serif; font-size: 17px; color: var(--text); font-weight: 700; letter-spacing: 1px; }
+.header-badge { font-size: 10px; color: var(--muted); font-family: monospace; border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; }
+#selector-btn { background: var(--surface2); border: 2px solid var(--active); border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; width: 100%; transition: border-color 0.4s, box-shadow 0.3s; box-shadow: 0 0 20px var(--active-glow); }
+.sel-left { display: flex; align-items: center; gap: 12px; }
+.sel-icon { font-size: 24px; }
+.sel-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.sel-sub { font-size: 10px; color: var(--muted); font-family: monospace; margin-top: 2px; }
+.sel-arrow { color: var(--muted); font-size: 13px; }
+#dropdown { display: none; background: #0A0A18; border-top: 1px solid var(--border); position: absolute; left: 0; right: 0; z-index: 200; box-shadow: 0 20px 40px rgba(0,0,0,0.6); max-width: 520px; margin: 0 auto; }
+#dropdown.open { display: block; }
+.dd-item { padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; border-left: 4px solid transparent; transition: background 0.2s; }
+.dd-item:active { background: var(--surface2); }
+.dd-item-name { font-size: 14px; color: var(--text); font-weight: 600; }
+.dd-item-sub { font-size: 10px; color: var(--muted); font-family: monospace; margin-top: 2px; }
+.dd-item-desc { font-size: 12px; color: var(--text2); margin-top: 3px; font-style: italic; }
 
+/* KPI bar */
+#kpi-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 10px; margin-bottom: 2px; }
+.kpi-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 6px; text-align: center; }
+.kpi-label { font-size: 8px; color: var(--muted); font-family: monospace; letter-spacing: 1px; margin-bottom: 3px; }
+.kpi-value { font-size: 15px; font-weight: 700; color: var(--text); }
+
+/* Search */
+#searchBox { width: 100%; margin-top: 8px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'Crimson Pro', serif; font-size: 13px; outline: none; transition: border-color 0.3s; }
+#searchBox:focus { border-color: var(--active); }
+#searchBox::placeholder { color: var(--muted); font-style: italic; }
+
+/* Toolbar */
+#toolbar { display: flex; gap: 8px; margin-top: 8px; margin-bottom: 0; padding-bottom: 10px; }
+.tool-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 11px; font-family: monospace; cursor: pointer; letter-spacing: 0.5px; transition: all 0.2s; white-space: nowrap; }
+.tool-btn:active { opacity: 0.7; }
+.tool-btn.primary { background: var(--active); border-color: var(--active); color: white; }
+
+#content { padding: 16px 14px 100px; }
+.phase-bar { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.phase-bar::-webkit-scrollbar { display: none; }
+.phase-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; border: 1px solid var(--border); color: var(--text2); background: var(--surface); font-family: monospace; letter-spacing: 0.5px; }
+.card { background: var(--surface); border-radius: 12px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--active), transparent); }
+.card p { line-height: 1.85; font-size: 14px; color: var(--text2); }
+.card-label { font-size: 9px; color: var(--muted); letter-spacing: 4px; font-family: monospace; margin-bottom: 12px; text-transform: uppercase; }
+.section-heading { font-size: 12px; color: var(--active); font-family: monospace; letter-spacing: 2px; margin: 16px 0 8px; padding-left: 10px; border-left: 3px solid var(--active); }
+.cause-item { display: flex; gap: 12px; padding: 12px 14px; background: var(--surface2); border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--active); transition: border-color 0.3s; align-items: flex-start; }
+.cause-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.cause-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.cause-desc { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+.cause-detail { font-size: 11.5px; color: var(--muted); margin-top: 4px; font-style: italic; }
+.brain-item { background: var(--surface2); border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
+.brain-item::after { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: var(--active); border-radius: 10px 0 0 10px; }
+.brain-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.brain-icon { font-size: 22px; }
+.brain-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.brain-role { display: inline-block; font-size: 10px; font-family: monospace; padding: 2px 8px; border-radius: 20px; margin-left: 6px; color: white; }
+.brain-desc { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 8px; }
+.brain-finding { font-size: 12px; color: var(--muted); line-height: 1.6; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 2px solid var(--border); }
+.brain-finding strong { color: var(--light); }
+.neuro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.neuro-item { background: var(--surface2); border-radius: 8px; padding: 12px; border: 1px solid var(--border); text-align: center; }
+.neuro-molecule { font-size: 22px; margin-bottom: 4px; }
+.neuro-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.neuro-role { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+.neuro-alteration { font-size: 10px; font-family: monospace; padding: 3px 8px; border-radius: 20px; margin-top: 6px; display: inline-block; font-weight: bold; }
+.compare-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.compare-table th { padding: 10px 12px; font-size: 12px; font-family: monospace; letter-spacing: 1px; text-align: left; border-bottom: 2px solid var(--border); }
+.compare-table td { padding: 10px 12px; font-size: 13px; color: var(--text2); border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table .row-label { font-size: 11px; font-family: monospace; color: var(--muted); font-weight: bold; white-space: nowrap; }
+.treat-card { background: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+.treat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--active); }
+.treat-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.treat-category { font-size: 9px; font-family: monospace; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.treat-name { font-size: 16px; font-weight: 600; color: var(--text); }
+.evidence-pill { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: bold; color: white; white-space: nowrap; flex-shrink: 0; }
+.treat-body { display: flex; gap: 10px; align-items: flex-start; }
+.treat-emoji { font-size: 22px; flex-shrink: 0; }
+.treat-mech { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.treat-notes { margin-top: 10px; padding: 10px 12px; background: rgba(108,63,200,0.1); border-radius: 8px; border-left: 3px solid var(--active); font-size: 12px; color: var(--light); line-height: 1.6; }
+.treat-warning { margin-top: 8px; padding: 8px 12px; background: rgba(231,76,60,0.1); border-radius: 6px; border-left: 3px solid #E74C3C; font-size: 12px; color: #E74C3C; line-height: 1.5; }
+.sym-section { margin-bottom: 14px; }
+.sym-section-title { font-size: 11px; font-family: monospace; letter-spacing: 2px; padding: 6px 12px; border-radius: 6px; margin-bottom: 8px; font-weight: bold; }
+.sym-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; margin-bottom: 6px; border-left: 3px solid var(--active); }
+.sym-bullet { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; background: var(--active); }
+.sym-text { font-size: 13.5px; color: var(--text2); line-height: 1.5; }
+.criteria-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.criteria-item:last-child { border-bottom: none; }
+.criteria-num { font-size: 11px; font-family: monospace; color: var(--active); flex-shrink: 0; padding-top: 2px; font-weight: bold; }
+.criteria-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.footer-bar { background: var(--surface); border-radius: 8px; padding: 12px 14px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; border: 1px solid var(--border); }
+.footer-bar span { font-size: 9px; color: var(--muted); font-family: monospace; }
+
+/* Study Mode */
+#studyCard { display: none; }
+#studyCard.active { display: block; }
+.study-question { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.6; margin-bottom: 16px; }
+.study-reveal { padding: 10px 14px; border-radius: 8px; background: var(--surface2); border: 1px dashed var(--border); font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 12px; }
+.study-nav { display: flex; gap: 8px; justify-content: space-between; }
+.study-nav button { flex: 1; padding: 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 12px; font-family: monospace; cursor: pointer; }
+.study-nav .next-btn { background: var(--active); border-color: var(--active); color: white; }
+.study-counter { font-size: 10px; font-family: monospace; color: var(--muted); text-align: center; margin-bottom: 10px; }
+.no-results { text-align: center; padding: 30px 20px; color: var(--muted); font-style: italic; font-size: 14px; }
+
+/* Search highlight */
+.search-match { background: rgba(108,63,200,0.2); border-radius: 3px; }
+
+/* Nav */
+#bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 520px; background: #0A0A18; border-top: 3px solid var(--active); display: flex; z-index: 100; }
+.nav-btn { flex: 1; padding: 10px 4px 13px; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; border-top: 3px solid transparent; margin-top: -3px; }
+.nav-btn.active { border-top-color: var(--active); }
+.nav-icon { font-size: 18px; }
+.nav-label { font-size: 8px; font-family: monospace; letter-spacing: 1px; color: var(--muted); font-weight: bold; }
+.nav-btn.active .nav-label { color: var(--text); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+@media print {
+  #bottom-nav, #toolbar, #searchBox, #kpi-bar { display: none !important; }
+  body { max-width: 100%; background: white; color: black; }
+  .tab-panel { display: block !important; }
+  .card, .brain-item, .treat-card, .sym-item, .cause-item { break-inside: avoid; border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="header-eyebrow">PSIQUIATRÍA CLÍNICA · NEUROCIENCIA AFECTIVA</div>
+  <div class="header-row">
+    <div class="header-title">Trastorno Bipolar</div>
+    <span class="header-badge">DSM-5-TR · ICD-11</span>
+  </div>
+  <button id="selector-btn" onclick="toggleDropdown()">
+    <div class="sel-left">
+      <span class="sel-icon" id="sel-icon">🌪️</span>
+      <div>
+        <div class="sel-name" id="sel-name">Trastorno Bipolar Tipo I</div>
+        <div class="sel-sub" id="sel-sub">TB-I · Episodios Maníacos Completos</div>
+      </div>
+    </div>
+    <span class="sel-arrow" id="sel-arrow">▼</span>
+  </button>
+  <div id="dropdown"></div>
+
+  <!-- KPI Bar -->
+  <div id="kpi-bar">
+    <div class="kpi-card"><div class="kpi-label">PREVALENCIA</div><div class="kpi-value" id="kpi-prev">1–2%</div></div>
+    <div class="kpi-card"><div class="kpi-label">HERENCIA</div><div class="kpi-value" id="kpi-her">85%</div></div>
+    <div class="kpi-card"><div class="kpi-label">EDAD INICIO</div><div class="kpi-value" id="kpi-age">18–25</div></div>
+    <div class="kpi-card"><div class="kpi-label">RIESGO SUIC.</div><div class="kpi-value" id="kpi-sui">20x</div></div>
+  </div>
+
+  <!-- Search -->
+  <input id="searchBox" placeholder="🔍  Buscar: amígdala, litio, manía..." oninput="doSearch(this.value)">
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button class="tool-btn primary" onclick="toggleStudyMode()">📖 Modo Estudio</button>
+    <button class="tool-btn" onclick="window.print()">🖨 Exportar PDF</button>
+    <button class="tool-btn" onclick="clearSearch()">✕ Limpiar</button>
+  </div>
+</div>
+
+<div id="content">
+  <div class="phase-bar" id="phase-bar"></div>
+
+  <!-- Study Mode Card (shown at top of content) -->
+  <div id="studyCard" class="card"></div>
+
+  <!-- Search no-results -->
+  <div id="noResults" class="no-results" style="display:none">Sin resultados para "<span id="noResultsTerm"></span>"</div>
+
+  <div class="tab-panel active" id="tab-causas"><div id="causas-content"></div></div>
+  <div class="tab-panel" id="tab-cerebro"><div id="cerebro-content"></div></div>
+  <div class="tab-panel" id="tab-sintomas"><div id="sintomas-content"></div></div>
+  <div class="tab-panel" id="tab-tratamiento"><div id="tratamiento-content"></div></div>
+
+  <div class="footer-bar">
+    <span>DSM-5-TR · ICD-11 · APA Guidelines · CANMAT 2023</span>
+    <span>Atlas Clínico · v2.1 · 2026</span>
+  </div>
+</div>
+
+<nav id="bottom-nav">
+  <button class="nav-btn active" id="nav-causas" onclick="switchTab('causas',this)"><span class="nav-icon">🧬</span><span class="nav-label">CAUSAS</span></button>
+  <button class="nav-btn" id="nav-cerebro" onclick="switchTab('cerebro',this)"><span class="nav-icon">🧠</span><span class="nav-label">CEREBRO</span></button>
+  <button class="nav-btn" id="nav-sintomas" onclick="switchTab('sintomas',this)"><span class="nav-icon">📊</span><span class="nav-label">SÍNTOMAS</span></button>
+  <button class="nav-btn" id="nav-tratamiento" onclick="switchTab('tratamiento',this)"><span class="nav-icon">💊</span><span class="nav-label">TRATAMIENTO</span></button>
+</nav>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const diseases=[{id:0,name:"Trastorno Bipolar Tipo I",abbr:"TB-I",sub:"Episodios Maníacos Completos",icon:"🌪️",color:"#E74C3C",colorGlow:"rgba(231,76,60,0.25)",colorLight:"rgba(231,76,60,0.15)",kpi:{prev:"1–2%",her:"85%",age:"18–25",sui:"20x"},phases:["MANÍA COMPLETA","DEPRESIÓN","MIXTO","EUTIMIA"],phaseColors:["#E74C3C","#3498DB","#9B59B6","#27AE60"],dsm_criteria:"Episodio maníaco completo ≥ 7 días (o cualquier duración si requiere hospitalización) con ≥ 3 síntomas adicionales. No necesariamente con episodio depresivo.",description:"Trastorno del estado de ánimo grave caracterizado por episodios maníacos completos que frecuentemente requieren hospitalización. Los episodios depresivos son comunes pero no obligatorios para el diagnóstico. Representa la forma más severa del espectro bipolar.",causas:[{icon:"🧬",title:"Factores Genéticos (contribución ~85%)",desc:"Poligénico complejo con múltiples variantes de riesgo. Concordancia en gemelos monocigóticos del 40–70%. Si un padre padece TB-I, el riesgo del hijo es del 10–15%.",detail:"Genes implicados: CACNA1C (canal calcio L-type), ANK3 (ankirina 3), CLOCK, BDNF Val66Met, SLC6A4 (transportador serotonina). Estudio GWAS 2021 identificó 64 loci de riesgo."},{icon:"⚗️",title:"Disregulación Neuroquímica Severa",desc:"Hiperactividad dopaminérgica mesolímbica durante manía. Déficit serotoninérgico en depresión. Desbalance noradrenérgico cíclico. Disfunción glutamato/GABA.",detail:"Estudios PET muestran ↑↑ liberación dopamina en núcleo accumbens durante episodio maníaco. El litio actúa regulando esta cascada vía GSK-3β."},{icon:"🕐",title:"Alteración Ritmos Circadianos",desc:"Disfunción del reloj biológico central (núcleo supraquiasmático). Polimorfismos en genes CLOCK y PERIOD. Privación de sueño puede desencadenar episodio maníaco en <48h.",detail:"El NSQ regula la secreción de melatonina por la glándula pineal. En TB-I hay adelanto de fase circadiana y reducción de la amplitud del ritmo melatonínico."},{icon:"🔥",title:"Neuroinflamación Crónica",desc:"Elevación sostenida de IL-6, TNF-α, IL-1β e IL-18 incluso en eutimia. Activación microglial persistente. Disfunción de la barrera hematoencefálica.",detail:"Meta-análisis 2022: IL-6 elevada en todos los estados del TB-I. El valproato y el litio tienen efectos antiinflamatorios directos sobre la microglia."},{icon:"⚡",title:"Kindling y Sensibilización Neural",desc:"Fenómeno de 'encendido': episodios repetidos reducen el umbral para nuevos episodios. Los primeros episodios requieren estrés desencadenante; los posteriores se vuelven autónomos.",detail:"Modelo Post: con cada episodio hay cambios epigenéticos acumulativos en genes de neurotrofinas (BDNF), promoviendo mayor vulnerabilidad neuronal."},{icon:"😰",title:"Factores Ambientales Desencadenantes",desc:"Estrés psicosocial severo (pérdidas, trauma), privación de sueño, sustancias (cocaína, anfetaminas, alcohol), cambios estacionales, puerperio.",detail:"El puerperio es el período de mayor riesgo para el primer episodio maníaco en mujeres predispuestas: riesgo 23x mayor que población general en las primeras 4 semanas postparto."},{icon:"🧫",title:"Alteraciones Mitocondriales",desc:"Disfunción en la cadena de transporte de electrones. Estrés oxidativo elevado. Reducción de ATP neuronal. El cerebro bipolar consume energía de forma anómala.",detail:"Biomarcadores de estrés oxidativo (8-OHdG, isoprostanos) consistentemente elevados. El NAC (N-acetilcisteína) como coadyuvante actúa en esta vía."},{icon:"🔬",title:"Disfunción del Eje HHA",desc:"Hipersecreción de CRH y cortisol. Desensibilización de receptores glucocorticoides en hipocampo. Retroalimentación negativa alterada del cortisol.",detail:"Cortisol crónico elevado causa atrofia hipocampal demostrable por RMN. El test de supresión con dexametasona no suprime en ~50% de pacientes con TB-I en fase depresiva."}],regiones:[{icon:"🌀",name:"Amígdala",role:"EPICENTRO",roleColor:"#E74C3C",desc:"Estructura clave en el procesamiento emocional. En TB-I presenta hiperactividad bilateral masiva durante episodios maníacos y depresivos. Es el 'termostato emocional' desregulado.",finding:"<strong>Hallazgos neuroimagen:</strong> Hipertrofia amigdalina (~10–15% mayor volumen) demostrada en RMN volumétrica. Hiperactividad en fMRI ante estímulos emocionales incluso en eutimia."},{icon:"🎛️",name:"Corteza Prefrontal (CPF)",role:"REGULACIÓN FALLIDA",roleColor:"#E67E22",desc:"El 'freno' cognitivo-emocional. CPF ventromedial para regulación emocional y CPF dorsolateral para funciones ejecutivas. Ambas fallan en TB-I.",finding:"<strong>Hallazgos:</strong> Reducción de materia gris en vmCPF (-12%). Hipoactivación dlCPF durante tareas cognitivas. Conectividad funcional reducida con sistema límbico."},{icon:"🔄",name:"Ganglios Basales / Estriado",role:"RECOMPENSA ALTERADA",roleColor:"#9B59B6",desc:"Núcleo accumbens, putamen y caudado. Central en circuitos de recompensa y motivación. Explica hipersexualidad, gastos impulsivos y búsqueda de riesgo en manía.",finding:"<strong>Hallazgos:</strong> ↑↑ Liberación de dopamina en núcleo accumbens (PET con racloprida). Sensibilización del receptor D2/D3. Hiperactivación estriatal ante recompensa en manía."},{icon:"🌊",name:"Hipocampo",role:"MEMORIA Y ESTRÉS",roleColor:"#3498DB",desc:"Regula memoria, aprendizaje y respuesta al estrés. Altamente vulnerable al cortisol crónico. Defectos en neurogénesis hipocampal adulta contribuyen a síntomas cognitivos.",finding:"<strong>Hallazgos:</strong> Reducción de volumen bilateral (3–5% por año no tratado). Restauración parcial del volumen con litio a largo plazo. Reducción de BDNF en hipocampo."},{icon:"⏰",name:"Núcleo Supraquiasmático (NSQ)",role:"RELOJ ROTO",roleColor:"#27AE60",desc:"Marcapasos circadiano del cerebro. En TB-I hay adelanto de fase y menor amplitud del ritmo circadiano, explicando la sensibilidad extrema a la privación de sueño.",finding:"<strong>Hallazgos:</strong> Polimorfismos en CLOCK/BMAL1/CRY1. Ciclos sueño-vigilia irregulares incluso en eutimia. La fototerapia matutina actúa directamente sobre el NSQ."},{icon:"🌉",name:"Sustancia Blanca y Conectividad",role:"CONECTOMA DAÑADO",roleColor:"#E74C3C",desc:"Tractos de fibras que conectan amígdala, CPF y estriado. En TB-I hay microestructura anómala del fascículo uncinado y cuerpo calloso.",finding:"<strong>Hallazgos DTI:</strong> Reducción de anisotropía fraccional en fascículo uncinado y cingulado anterior. Correlaciona con severidad de síntomas maníacos."},{icon:"🌡️",name:"Hipotálamo y Eje HHA",role:"ESTRÉS CRÓNICO",roleColor:"#E67E22",desc:"Regula el eje hipotálamo-hipófisis-adrenal. CRH hipotalámica elevada → hipercortisolemia crónica → daño neuronal progresivo en hipocampo y CPF.",finding:"<strong>Hallazgos:</strong> CRH en LCR elevada. Cortisol urinario 24h elevado en fases activas. Tamaño hipofisario aumentado en TB crónico."},{icon:"⚡",name:"Cerebelo",role:"REGULACIÓN EMOCIONAL",roleColor:"#16A085",desc:"El cerebelo participa en regulación cognitivo-emocional (vermis cerebeloso). En TB-I hay reducción de volumen del vermis y conexiones con CPF.",finding:"<strong>Hallazgos:</strong> Hipometabolismo cerebeloso en PET-FDG. Reducción del lóbulo VIII. El litio aumenta volumen del vermis."}],sintomas:{mania:["Euforia o irritabilidad extrema persistente ≥ 7 días","Grandiosidad / autoestima desproporcionada","Disminución necesidad de sueño (2-3h y se siente descansado)","Logorrea y presión del habla incoercible","Fuga de ideas / pensamiento acelerado","Distractibilidad extrema","Aumento actividad dirigida a metas / agitación psicomotriz","Conductas de riesgo: gastos, hipersexualidad, inversiones temerarias","Síntomas psicóticos en manía severa: alucinaciones y delirios de grandeza"],depresion:["Estado de ánimo deprimido la mayor parte del día","Anhedonia profunda (incapacidad de sentir placer)","Hipersomnia o insomnio severo","Hiperfagia con aumento de peso (70% de los casos)","Enlentecimiento psicomotriz severo / estupor","Fatiga y pérdida de energía extrema","Sentimientos de culpa inapropiada / inutilidad","Deterioro cognitivo: concentración, memoria de trabajo","Ideación suicida (riesgo 20–30x mayor que población general)"],mixto:["Coexistencia de síntomas maníacos y depresivos simultáneos","Estado más peligroso: energía maníaca con disforia depresiva","Alto riesgo suicida: 40% de los suicidios ocurren en fase mixta","Llanto con agitación, irritabilidad con desesperanza","Insomnio severo con hiperactividad angustiada"]},dsm_criteria_detail:[{n:"A",text:"Episodio maníaco claramente diferenciable: estado de ánimo anormal y persistentemente elevado/expansivo/irritable + aumento de actividad o energía, casi todos los días, ≥ 7 días."},{n:"B",text:"≥ 3 síntomas de: autoestima inflada, disminución necesidad de sueño, logorrea, fuga de ideas, distractibilidad, aumento actividad dirigida, conductas de riesgo. (4 si el ánimo es irritable)."},{n:"C",text:"Suficientemente grave para causar marcado deterioro o requiere hospitalización o hay características psicóticas."},{n:"D",text:"No atribuible a sustancias o enfermedad médica."}],treatments:[{cat:"ESTABILIZADORES DEL ÁNIMO — PRIMERA LÍNEA",emoji:"🔋",items:[{name:"Litio (Li⁺)",evidence:"A",evidColor:"#27AE60",indication:"MANÍA · DEPRESIÓN · MANTENIMIENTO",mech:"Mecanismo multidimensional: inhibe GSK-3β (neuroprotección), regula inositol-fosfato, modulación serotonérgica, aumento de BDNF, efecto antiinflamatorio sobre microglia.",notes:"El único fármaco con evidencia antisuicida robusta (reduce riesgo en 82%). Niveles séricos: 0.6–1.0 mEq/L mantenimiento; 0.8–1.2 mEq/L agudo.",warning:"Monitoreo: función renal, tiroidea y litemia cada 3–6 meses. Toxicidad desde 1.5 mEq/L."},{name:"Valproato / Divalproex",evidence:"A",evidColor:"#27AE60",indication:"MANÍA AGUDA · CICLOS RÁPIDOS · MIXTO",mech:"Inhibición de canales de sodio, potenciación GABAérgica, reducción de glutamato, inhibición de histona deacetilasas (efecto epigenético), inhibición GSK-3β.",notes:"Superior al litio en ciclos rápidos y estados mixtos. Niveles séricos: 50–125 µg/mL.",warning:"Contraindicado en embarazo (teratógeno). Hepatotoxicidad. SOP en mujeres."}]},{cat:"ANTIPSICÓTICOS ATÍPICOS — PRIMERA LÍNEA",emoji:"🎯",items:[{name:"Quetiapina",evidence:"A",evidColor:"#27AE60",indication:"MANÍA · DEPRESIÓN · MANTENIMIENTO",mech:"Antagonismo D2/D1, 5-HT2A/2C, H1, α1/α2. Acción antidepresiva vía bloqueo 5-HT2C y metabolito activo norquetiapina (inhibidor recaptura noradrenalina).",notes:"Único atípico aprobado para las 3 fases del TB-I. Dosis manía: 400–800mg. Depresión: 300mg.",warning:"Síndrome metabólico. Somnolencia. Hipotensión ortostática."},{name:"Aripiprazol",evidence:"A",evidColor:"#27AE60",indication:"MANÍA AGUDA · MANTENIMIENTO",mech:"Agonista parcial D2/D3 y 5-HT1A, antagonista 5-HT2A. 'Estabilizador dopaminérgico': agonista en hipodopaminergia, antagonista funcional en hiperdopaminergia.",notes:"Perfil metabólico favorable. Formulación inyectable mensual (Abilify Maintena) para adherencia.",warning:"Acatisia frecuente. No aprobado para depresión bipolar en monoterapia."},{name:"Olanzapina",evidence:"A",evidColor:"#27AE60",indication:"MANÍA SEVERA · PSICOSIS · AGITACIÓN",mech:"Potente antagonismo D1-4, 5-HT2A/2C, M1-5, H1, α1. Acción rápida sobre agitación maníaca severa.",notes:"Eficacia alta en manía aguda con psicosis. Formulación IM para emergencias (inicio 15–45 min).",warning:"Mayor riesgo metabólico de todos los atípicos: +4–7kg, diabetes, dislipemia."}]},{cat:"DEPRESIÓN BIPOLAR — ESPECIFICIDADES",emoji:"🌧️",items:[{name:"Lurasidona",evidence:"A",evidColor:"#27AE60",indication:"DEPRESIÓN BIPOLAR",mech:"Antagonista D2, 5-HT2A, 5-HT7. Agonismo parcial 5-HT1A. El bloqueo 5-HT7 tiene efecto antidepresivo y procognitivo.",notes:"Aprobada FDA 2013. Mejora cognición y síntomas ansiosos. Dosis: 20–120mg/día con comida.",warning:"Tomar siempre con alimentos. Interacción con inhibidores CYP3A4."},{name:"PRECAUCIÓN: Antidepresivos en Monoterapia",evidence:"⚠️",evidColor:"#E74C3C",indication:"CONTRAINDICACIÓN RELATIVA EN TB-I",mech:"Pueden precipitar viraje maníaco, hipomaníaco o mixto. Riesgo de ciclos rápidos. Siempre combinar con estabilizador.",notes:"ISRS y bupropión tienen menor riesgo. ADT tricíclicos tienen mayor riesgo de viraje.",warning:"Nunca en monoterapia. Monitoreo muy estricto de síntomas hipomaníacos."}]},{cat:"TERAPIAS NO FARMACOLÓGICAS",emoji:"🧘",items:[{name:"Psicoeducación Estructurada",evidence:"A",evidColor:"#27AE60",indication:"TODAS LAS FASES · MANTENIMIENTO",mech:"21 sesiones (Colom & Vieta, Barcelona). Reconocimiento de pródromos, higiene del sueño, adherencia farmacológica, manejo del estrés.",notes:"Reduce recaídas en 60%. Modelo de Barcelona validado con 7 años de seguimiento.",warning:null},{name:"Terapia Cognitivo-Conductual (TCC)",evidence:"B",evidColor:"#E67E22",indication:"DEPRESIÓN · MANTENIMIENTO",mech:"Reestructura pensamientos disfuncionales. Prevención de recaídas. Activación conductual para fase depresiva.",notes:"Reducción de hospitalizaciones en 30%. Superior combinada con farmacología.",warning:null},{name:"IPSRT — Ritmo Interpersonal y Social",evidence:"A",evidColor:"#27AE60",indication:"MANTENIMIENTO · PREVENCIÓN",mech:"Regulación de ritmos circadianos y sociales. Estabiliza horarios de sueño, comidas y actividad. Actúa sobre NSQ indirectamente.",notes:"Desarrollada por Frank et al. Especialmente eficaz con alta sensibilidad circadiana.",warning:null},{name:"TEC — Terapia Electroconvulsiva",evidence:"A",evidColor:"#27AE60",indication:"MANÍA SEVERA REFRACTARIA · DEPRESIÓN GRAVE",mech:"Induce seizure bajo anestesia. Libera BDNF, normaliza eje HHA, modula receptores NMDA.",notes:"La más eficaz en manía severa refractaria y depresión con riesgo vital. 6–12 sesiones.",warning:"Amnesia anterógrada transitoria. Requiere anestesia general."}]}]},{id:1,name:"Trastorno Bipolar Tipo II",abbr:"TB-II",sub:"Hipomanía + Depresión Mayor",icon:"🌊",color:"#2980B9",colorGlow:"rgba(41,128,185,0.25)",colorLight:"rgba(41,128,185,0.15)",kpi:{prev:"1–2.5%",her:"75%",age:"25–35",sui:"15x"},phases:["HIPOMANÍA","DEPRESIÓN","MIXTO","EUTIMIA"],phaseColors:["#F39C12","#2980B9","#8E44AD","#27AE60"],dsm_criteria:"Al menos un episodio hipomaníaco (4–6 días, sin hospitalización, sin psicosis) + al menos un episodio depresivo mayor. NUNCA ha habido episodio maníaco completo.",description:"Frecuentemente infradiagnosticado porque la hipomanía puede ser egosintónica. El 60–70% del tiempo se pasa en depresión. Alta carga de sufrimiento y discapacidad funcional a pesar de la hipomanía 'suave'.",causas:[{icon:"🧬",title:"Base Genética Diferenciada",desc:"Comparte genes de riesgo con TB-I pero con perfil parcialmente distinto. Mayor concordancia con trastorno depresivo mayor. Heredabilidad 70–80%.",detail:"CACNA1C compartido con TB-I pero menor penetrancia. Variantes en PER3 y ARNTL parecen más específicas del TB-II."},{icon:"🧠",title:"Hipersensibilidad al Sistema de Recompensa",desc:"Sistema dopaminérgico mesolímbico hiperactivo de forma más contenida que en TB-I. La hipomanía representa activación funcional del circuito de recompensa.",detail:"El umbral de activación maníaca nunca se alcanza. Sugiere diferencias en densidad de receptores D2/D3 en estriado ventral."},{icon:"🌙",title:"Mayor Carga Depresiva y Disritmia",desc:"Pacientes pasan 50–60% del tiempo en depresión vs 30% en TB-I. La disritmia afecta principalmente la arquitectura del sueño REM.",detail:"Mayor latencia REM, menor densidad REM, múltiples despertares. Hipocampo muestra mayor atrofia por carga depresiva acumulada."},{icon:"💔",title:"Trauma y Adversidad Temprana",desc:"Alta prevalencia de trauma infantil. Modifica epigenéticamente genes reguladores del eje HHA y receptores glucocorticoides.",detail:"Abuso sexual en infancia aumenta 3x el riesgo de TB-II. Altera metilación del promotor del gen NR3C1 (receptor glucocorticoide)."},{icon:"😔",title:"Temperamento Hipertímico de Base",desc:"Muchos pacientes tienen temperamento ciclotímico o hipertímico previo al primer episodio. Alta actividad BAS predice viraje a hipomanía.",detail:"El temperamento afectivo es el endofenotipo más heredable del espectro bipolar. La escala TEMPS-A permite identificarlo."},{icon:"💊",title:"Inducción Farmacológica",desc:"Antidepresivos pueden inducir hipomanía en predispuestos, revelando TB-II subyacente. Estimulantes y corticosteroides también.",detail:"20–40% de los diagnósticos comienzan con hipomanía inducida por antidepresivos prescritos para 'depresión mayor'."},{icon:"🔄",title:"Ciclos Rápidos como Complicación",desc:"4 o más episodios por año. Más frecuente en TB-II que TB-I. Precipitantes: hipotiroidismo, antidepresivos, sustancias, privación de sueño.",detail:"Hipotiroidismo subclínico en 30% de cicladores rápidos. La normalización tiroidea puede romper el patrón."},{icon:"⚖️",title:"Diferencias de Género",desc:"TB-II más frecuente en mujeres. Ciclos rápidos y depresión predominan. Los estrógenos modulan sensibilidad de receptores de serotonina y dopamina.",detail:"Cambios hormonales del ciclo menstrual, embarazo y menopausia pueden desestabilizar el TB-II."}],regiones:[{icon:"🌀",name:"Amígdala",role:"HIPERREACTIVIDAD",roleColor:"#2980B9",desc:"En TB-II muestra hiperreactividad ante estímulos negativos mayor que en TB-I depresivo. Explica la alta sensibilidad interpersonal característica.",finding:"<strong>Hallazgos:</strong> Asimetría amigdalina (izquierda > derecha). Respuesta exagerada al rechazo social. Hiperconectividad amígdala-corteza prefrontal orbital."},{icon:"🎛️",name:"Corteza Prefrontal Ventromedial",role:"REGULACIÓN EMOCIONAL",roleColor:"#E67E22",desc:"El vmCPF falla en regulación 'descendente' de la amígdala. En TB-II esta falla es más pronunciada durante la depresión.",finding:"<strong>Hallazgos:</strong> Menor activación vmCPF ante regulación emocional. El grosor cortical de vmCPF correlaciona inversamente con número de episodios depresivos."},{icon:"🌊",name:"Hipocampo",role:"MAYOR VULNERABILIDAD",roleColor:"#2980B9",desc:"La carga depresiva mayor provoca mayor atrofia hipocampal acumulada que en TB-I. Menor neurogénesis adulta por hipercortisolemia crónica.",finding:"<strong>Hallazgos:</strong> Reducción de volumen bilateral más pronunciada que TB-I. El litio protege parcialmente. Correlación con déficits de memoria episódica."},{icon:"🔆",name:"Corteza Cingulada Anterior (CCA)",role:"DOLOR EMOCIONAL",roleColor:"#9B59B6",desc:"En TB-II depresivo hay hiperactividad subgenual (Cg25) que regula el estado de ánimo negativamente y reduce la motivación.",finding:"<strong>Hallazgos:</strong> Hiperactividad del CCA subgenual en depresión. La estimulación cerebral profunda del Cg25 es experimental."},{icon:"🌉",name:"Red de Modo Defecto (DMN)",role:"RUMIACIÓN PATOLÓGICA",roleColor:"#E74C3C",desc:"La DMN está hiperactiva en reposo durante depresión bipolar. Correlaciona directamente con rumiación y autocrítica.",finding:"<strong>Hallazgos fMRI:</strong> Incapacidad de desactivar la DMN durante tareas cognitivas. Mindfulness reduce esta hiperconectividad."},{icon:"⚡",name:"Eje HHA",role:"DISREGULACIÓN CRÓNICA",roleColor:"#E67E22",desc:"Hipercortisolemia más sostenida en TB-II por mayor tiempo en depresión. Los glucocorticoides dañan hipocampo y reducen BDNF.",finding:"<strong>Hallazgos:</strong> Cortisol salival elevado en eutimia. Prueba de supresión con dexametasona no suprime en 40% de TB-II depresivo."},{icon:"🔵",name:"Corteza Insular",role:"INTEROCEPCIÓN",roleColor:"#3498DB",desc:"La ínsula anterior integra señales corporales con el estado emocional. Hiperactividad relacionada con hipersensibilidad interpersonal (SIEH).",finding:"<strong>Hallazgos:</strong> Mayor activación insular ante rechazo social. Conectividad ínsula-amígdala aumentada. Explica el dolor emocional ante críticas."},{icon:"🌟",name:"Núcleos del Rafé (Serotonina)",role:"DEFICIENCIA CRÓNICA",roleColor:"#16A085",desc:"La deficiencia serotoninérgica es más persistente en TB-II que en TB-I, explicando la mayor carga depresiva.",finding:"<strong>Hallazgos SPECT:</strong> Menor densidad del transportador SERT en rafé dorsal. Polimorfismo 5-HTTLPR (alelo s) más frecuente en TB-II."}],sintomas:{mania:["Ánimo elevado/expansivo/irritable persistente 4–6 días (NUNCA llega a manía completa)","Autoestima aumentada o cierta grandiosidad (pero no delirante)","Disminución necesidad de sueño (1-2h menos, aún activo y funcional)","Habla más de lo habitual, más rápido","Pensamiento más ágil, conexiones de ideas fluidas","Aumento marcado en actividad (trabajo, proyectos, socialización)","Juicio levemente alterado pero sin consecuencias graves","FUNCIONA: va al trabajo, mantiene relaciones (diferencia clave con TB-I)","Egosintónica: el paciente la disfruta y no siempre la reporta"],depresion:["Depresión severa de larga duración (promedio 5 meses por episodio)","Hipersomnia marcada (12–14 horas/día) — más frecuente que en MDD","Hiperfagia y antojos de carbohidratos (ganancia de peso)","Parálisis de plomo: sensación de pesadez extrema en extremidades","Sensibilidad al rechazo interpersonal (SIEH) — rasgo caracterológico","Lentitud cognitiva: 'niebla mental', problemas de concentración","Anhedonia profunda pero con capacidad de reactividad afectiva fugaz","Irritabilidad disfórica más que tristeza pura","Ideación suicida: riesgo similar o mayor que TB-I por más tiempo en depresión"],mixto:["Episodio depresivo con síntomas hipomaníacos superpuestos","Logorrea ansiosa con contenido depresivo","Pensamiento acelerado con rumiación negativa","Agitación intensa con desesperanza","Insomnio severo (a diferencia del episodio depresivo puro)"]},dsm_criteria_detail:[{n:"A",text:"Al menos un episodio hipomaníaco que cumpla criterios completos y al menos un episodio depresivo mayor."},{n:"B",text:"NUNCA ha habido un episodio maníaco completo. Si ocurre uno, el diagnóstico cambia a TB-I de forma permanente."},{n:"C",text:"Los episodios no se explican mejor por otro trastorno. La hipomanía causa cambio observable pero NO requiere hospitalización."},{n:"D",text:"Los síntomas depresivos causan deterioro significativo. La hipomanía puede NO causar deterioro."}],treatments:[{cat:"ESTABILIZADORES — MANTENIMIENTO Y DEPRESIÓN",emoji:"⚖️",items:[{name:"Litio (Li⁺)",evidence:"A",evidColor:"#27AE60",indication:"MANTENIMIENTO · PREVENCIÓN DEPRESIÓN",mech:"Mismos mecanismos que en TB-I. Especialmente eficaz en prevención de episodios depresivos. Niveles: 0.5–0.8 mEq/L en mantenimiento.",notes:"Primera línea en TB-II. Evidencia más fuerte para prevención depresiva que valproato en este subtipo. Efecto antisuicida.",warning:"Mismo perfil de monitoreo que en TB-I."},{name:"Lamotrigina",evidence:"A",evidColor:"#27AE60",indication:"DEPRESIÓN BIPOLAR · MANTENIMIENTO",mech:"Bloqueo de canales de sodio → reduce liberación de glutamato. Acción antidepresiva sin riesgo de viraje, única en esta clase.",notes:"Fármaco de elección para depresión en TB-II según CANMAT 2023. NO eficaz para manía. Titular lentamente 6–8 semanas. Dosis: 100–400mg.",warning:"Stevens-Johnson: titular muy lentamente, especialmente con valproato. Suspender ante cualquier rash."}]},{cat:"ANTIPSICÓTICOS ATÍPICOS EN TB-II",emoji:"🎯",items:[{name:"Quetiapina",evidence:"A",evidColor:"#27AE60",indication:"DEPRESIÓN · HIPOMANÍA · MANTENIMIENTO",mech:"Especialmente eficaz para depresión bipolar vía bloqueo 5-HT2C y norquetiapina. Restaura arquitectura del sueño.",notes:"Dosis bajas (50–150mg) útiles para insomnio y ansiedad disfórica. Dosis 300mg para episodio depresivo completo.",warning:"Somnolencia diurna puede dificultar funcionamiento laboral."},{name:"Lurasidona",evidence:"A",evidColor:"#27AE60",indication:"DEPRESIÓN EN TB-II",mech:"Perfil metabólico neutro y efecto procognitivo especialmente relevante en TB-II por alta carga depresiva.",notes:"Opción preferida con preocupaciones metabólicas. Mejora síntomas cognitivos residuales.",warning:"Tomar siempre con alimentos (≥350 calorías)."}]},{cat:"TERAPIAS NO FARMACOLÓGICAS TB-II",emoji:"🧠",items:[{name:"Terapia Enfocada en la Familia (FFT)",evidence:"A",evidColor:"#27AE60",indication:"MANTENIMIENTO · REDUCCIÓN RECAÍDAS",mech:"21 sesiones con paciente y familia. Psicoeducación familiar, comunicación mejorada, resolución de problemas.",notes:"Mikkowitz et al.: FFT reduce recaídas depresivas 40% en TB-II. Especialmente eficaz en familias con alta emoción expresada.",warning:null},{name:"MBCT — Mindfulness Cognitivo",evidence:"B",evidColor:"#E67E22",indication:"DEPRESIÓN RESIDUAL · PREVENCIÓN",mech:"8 sesiones meditación + TCC. Reduce hiperactividad de la DMN. Mejora metacognición y regulación prefrontal de la amígdala.",notes:"Útil en TB-II por patrón de rumiación crónica. NO usar en fase activa hipomaníaca.",warning:"Contraindicado en manía activa."},{name:"Higiene del Sueño y Cronobiología",evidence:"A",evidColor:"#27AE60",indication:"PREVENCIÓN · MANTENIMIENTO",mech:"Horarios fijos de sueño. Fototerapia matutina (10.000 lux, 30 min). Control luz azul nocturna. Melatonina prolongada.",notes:"La estabilidad circadiana es el predictor más potente de eutimia en TB-II. Una noche de privación puede precipitar hipomanía.",warning:"Fototerapia contraindicada en hipomanía activa."},{name:"DBT — Terapia Dialéctico-Conductual",evidence:"B",evidColor:"#E67E22",indication:"DESREGULACIÓN EMOCIONAL · IMPULSIVIDAD",mech:"Habilidades de tolerancia al malestar, regulación emocional, efectividad interpersonal y mindfulness.",notes:"Alta comorbilidad TB-II con TLP (20–40%). DBT desambigua y trata ambos.",warning:null}]}]}];
+
+// ─── STUDY MODE DATA ─────────────────────────────────────────────────────────
+function buildStudyCards(d) {
+  const cards = [];
+  d.causas.forEach(c => cards.push({ q: `¿Cuál es el rol de "${c.title}" en el ${d.abbr}?`, a: c.desc + ' — ' + c.detail }));
+  d.regiones.forEach(r => cards.push({ q: `¿Qué le pasa a la ${r.name} en el ${d.abbr}?`, a: r.desc + ' ' + r.finding.replace(/<[^>]+>/g,'') }));
+  d.sintomas.mania.slice(0,4).forEach(s => cards.push({ q: `¿Cómo se manifiesta este síntoma en ${d.abbr}?`, a: s }));
+  d.treatments.forEach(g => g.items.slice(0,2).forEach(t => cards.push({ q: `¿Cuál es el mecanismo de acción de ${t.name}?`, a: t.mech + (t.notes?' | Nota: '+t.notes:'') })));
+  d.dsm_criteria_detail.forEach(c => cards.push({ q: `Criterio DSM-5-TR ${c.n} para ${d.abbr}:`, a: c.text }));
+  return cards;
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let current = 0, dropdownOpen = false, studyActive = false;
+let studyCards = [], studyIndex = 0, studyRevealed = false;
+
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+function doSearch(query) {
+  query = query.trim().toLowerCase();
+  const noResults = document.getElementById('noResults');
+  if (!query) {
+    document.querySelectorAll('.brain-item,.cause-item,.sym-item,.treat-card').forEach(el => el.style.display = '');
+    noResults.style.display = 'none';
+    return;
+  }
+  let found = 0;
+  document.querySelectorAll('.brain-item,.cause-item,.sym-item,.treat-card').forEach(el => {
+    if (el.innerText.toLowerCase().includes(query)) { el.style.display = ''; found++; }
+    else el.style.display = 'none';
+  });
+  // Show all tab panels while searching
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = found > 0 ? 'block' : '');
+  noResults.style.display = found === 0 ? 'block' : 'none';
+  document.getElementById('noResultsTerm').textContent = query;
+}
+
+function clearSearch() {
+  document.getElementById('searchBox').value = '';
+  doSearch('');
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = '');
+  const lastTab = localStorage.getItem('lastTab') || 'causas';
+  switchTab(lastTab, document.getElementById('nav-' + lastTab));
+}
+
+// ─── STUDY MODE ──────────────────────────────────────────────────────────────
+function toggleStudyMode() {
+  studyActive = !studyActive;
+  const card = document.getElementById('studyCard');
+  if (studyActive) {
+    studyCards = buildStudyCards(diseases[current]);
+    studyCards = studyCards.sort(() => Math.random() - 0.5);
+    studyIndex = 0; studyRevealed = false;
+    card.classList.add('active');
+    renderStudyCard();
+    document.querySelector('.tool-btn.primary').textContent = '✕ Cerrar Estudio';
+  } else {
+    card.classList.remove('active');
+    document.querySelector('.tool-btn.primary').textContent = '📖 Modo Estudio';
+  }
+}
+
+function renderStudyCard() {
+  const card = document.getElementById('studyCard');
+  const sc = studyCards[studyIndex];
+  card.innerHTML = `
+    <div class="card-label">MODO ESTUDIO · FLASHCARD</div>
+    <div class="study-counter">${studyIndex + 1} / ${studyCards.length}</div>
+    <div class="study-question">${sc.q}</div>
+    ${studyRevealed
+      ? `<div class="study-reveal">${sc.a}</div>`
+      : `<div style="text-align:center;padding:12px 0;color:var(--muted);font-style:italic;font-size:13px;">Toca "Revelar" para ver la respuesta</div>`
+    }
+    <div class="study-nav">
+      <button onclick="studyPrev()">◀ Anterior</button>
+      ${!studyRevealed
+        ? `<button class="next-btn" onclick="studyReveal()">👁 Revelar</button>`
+        : `<button class="next-btn" onclick="studyNext()">Siguiente ▶</button>`
+      }
+    </div>`;
+}
+
+function studyReveal() { studyRevealed = true; renderStudyCard(); }
+function studyNext() { studyIndex = (studyIndex + 1) % studyCards.length; studyRevealed = false; renderStudyCard(); }
+function studyPrev() { studyIndex = (studyIndex - 1 + studyCards.length) % studyCards.length; studyRevealed = false; renderStudyCard(); }
+
+// ─── THEME ───────────────────────────────────────────────────────────────────
+function setTheme(d) {
+  document.documentElement.style.setProperty('--active', d.color);
+  document.documentElement.style.setProperty('--active-glow', d.colorGlow);
+}
+
+// ─── DROPDOWN ────────────────────────────────────────────────────────────────
+function toggleDropdown() {
+  dropdownOpen = !dropdownOpen;
+  document.getElementById('dropdown').classList.toggle('open', dropdownOpen);
+  document.getElementById('sel-arrow').textContent = dropdownOpen ? '▲' : '▼';
+}
+
+function buildDropdown() {
+  document.getElementById('dropdown').innerHTML = diseases.map((d,i) =>
+    `<div class="dd-item" onclick="selectDisease(${i})" style="border-left-color:${d.color};${i===current?'background:#1A1A35;':''}">
+      <span style="font-size:26px">${d.icon}</span>
+      <div><div class="dd-item-name">${d.name}</div>
+      <div class="dd-item-sub">${d.abbr} · ${d.kpi.prev}</div>
+      <div class="dd-item-desc">${d.sub}</div></div>
+    </div>`).join('');
+}
+
+function selectDisease(idx) {
+  current = idx; dropdownOpen = false;
+  document.getElementById('dropdown').classList.remove('open');
+  document.getElementById('sel-arrow').textContent = '▼';
+  if (studyActive) { studyActive = false; document.getElementById('studyCard').classList.remove('active'); document.querySelector('.tool-btn.primary').textContent = '📖 Modo Estudio'; }
+  clearSearch();
+  renderAll(); buildDropdown();
+  switchTab('causas', document.getElementById('nav-causas'));
+}
+
+// ─── RENDER ALL ──────────────────────────────────────────────────────────────
+function renderAll() {
+  const d = diseases[current];
+  setTheme(d);
+  document.getElementById('sel-icon').textContent = d.icon;
+  document.getElementById('sel-name').textContent = d.name;
+  document.getElementById('sel-sub').textContent = `${d.abbr} · ${d.sub}`;
+  // KPIs
+  document.getElementById('kpi-prev').textContent = d.kpi.prev;
+  document.getElementById('kpi-her').textContent = d.kpi.her;
+  document.getElementById('kpi-age').textContent = d.kpi.age;
+  document.getElementById('kpi-sui').textContent = d.kpi.sui;
+  // Phase bar
+  document.getElementById('phase-bar').innerHTML = d.phases.map((p,i) =>
+    `<span class="phase-chip" style="background:${d.phaseColors[i]}22;color:${d.phaseColors[i]};border-color:${d.phaseColors[i]}44">${p}</span>`).join('');
+  renderCausas(d); renderCerebro(d); renderSintomas(d); renderTratamiento(d);
+}
+
+function renderCausas(d) {
+  document.getElementById('causas-content').innerHTML = `
+    <div class="card"><div class="card-label">DESCRIPCIÓN CLÍNICA · ${d.abbr}</div><p>${d.description}</p>
+    <div class="section-heading">CRITERIO DIAGNÓSTICO CLAVE (DSM-5-TR)</div>
+    <p style="font-style:italic;font-size:13px;">${d.dsm_criteria}</p></div>
+    <div class="card"><div class="card-label">ETIOLOGÍA MULTIFACTORIAL — 8 DIMENSIONES</div>
+    ${d.causas.map(c=>`<div class="cause-item" style="border-left-color:${d.color}">
+      <span class="cause-icon">${c.icon}</span>
+      <div><div class="cause-title">${c.title}</div><div class="cause-desc">${c.desc}</div>
+      <div class="cause-detail">📌 ${c.detail}</div></div></div>`).join('')}</div>
+    <div class="card"><div class="card-label">NEUROTRANSMISORES CLAVE</div>
+    <div class="neuro-grid">${[
+      {mol:"⚡",name:"Dopamina",role:"Motivación, recompensa, manía",alt:"↑↑ Manía / ↓ Depresión",altColor:"#E74C3C"},
+      {mol:"🌊",name:"Serotonina",role:"Estado de ánimo, sueño, ansiedad",alt:"↓ en depresión bipolar",altColor:"#3498DB"},
+      {mol:"🔋",name:"Glutamato",role:"Excitación neuronal, plasticidad",alt:"↑ excitotoxicidad crónica",altColor:"#E67E22"},
+      {mol:"🛡️",name:"GABA",role:"Inhibición, ansiedad, sueño",alt:"↓ en manía/hipomanía",altColor:"#27AE60"},
+      {mol:"⚙️",name:"Noradrenalina",role:"Alerta, energía, concentración",alt:"↑ Manía / ↓ Depresión",altColor:"#9B59B6"},
+      {mol:"🏃",name:"BDNF",role:"Supervivencia neuronal, plasticidad",alt:"↓ crónico sin tratamiento",altColor:"#E74C3C"}
+    ].map(n=>`<div class="neuro-item"><div class="neuro-molecule">${n.mol}</div>
+      <div class="neuro-name">${n.name}</div><div class="neuro-role">${n.role}</div>
+      <span class="neuro-alteration" style="background:${n.altColor}22;color:${n.altColor}">${n.alt}</span></div>`).join('')}</div></div>
+    <div class="card"><div class="card-label">CRITERIOS DSM-5-TR — DETALLE</div>
+    ${d.dsm_criteria_detail.map(c=>`<div class="criteria-item">
+      <span class="criteria-num">${c.n}</span><span class="criteria-text">${c.text}</span></div>`).join('')}</div>`;
+}
+
+function renderCerebro(d) {
+  document.getElementById('cerebro-content').innerHTML = `
+    <div class="card"><div class="card-label">NEUROANATOMÍA FUNCIONAL — 8 REGIONES</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Hallazgos de neuroimagen estructural (RMN, DTI) y funcional (fMRI, PET) en ${d.abbr}</p></div>
+    ${d.regiones.map(r=>`<div class="brain-item">
+      <div class="brain-header"><span class="brain-icon">${r.icon}</span>
+      <div><span class="brain-name">${r.name}</span>
+      <span class="brain-role" style="background:${r.roleColor}22;color:${r.roleColor}">${r.role}</span></div></div>
+      <div class="brain-desc">${r.desc}</div>
+      <div class="brain-finding">${r.finding}</div></div>`).join('')}
+    <div class="card"><div class="card-label">COMPARATIVA TB-I vs TB-II</div>
+    <div style="overflow-x:auto;"><table class="compare-table">
+      <thead><tr><th class="row-label">ESTRUCTURA</th><th style="color:#E74C3C">TB-I</th><th style="color:#2980B9">TB-II</th></tr></thead>
+      <tbody>${[
+        ["Amígdala","Hipertrofia bilateral +15%","Hiperreactividad funcional"],
+        ["Hipocampo","Atrofia moderada","Atrofia mayor (más depresión)"],
+        ["CPF dorsolateral","Hipoactivación en depresión","Hipoactivación moderada"],
+        ["Estriado/Accumbens","↑↑ Dopamina en manía","↑ Dopamina en hipomanía"],
+        ["Sustancia blanca","Anomalías fascículo uncinado","Menor compromiso"],
+        ["Cerebelo (vermis)","Hipometabolismo marcado","Hipometabolismo leve"]
+      ].map(r=>`<tr><td class="row-label">${r[0]}</td><td style="color:#E74C3C;font-weight:600">${r[1]}</td><td style="color:#2980B9;font-weight:600">${r[2]}</td></tr>`).join('')}
+      </tbody></table></div></div>`;
+}
+
+function renderSintomas(d) {
+  const s = d.sintomas;
+  const sections = current===0
+    ? [{title:"MANÍA COMPLETA",color:"#E74C3C",bg:"rgba(231,76,60,0.1)",items:s.mania},
+       {title:"EPISODIO DEPRESIVO MAYOR",color:"#3498DB",bg:"rgba(52,152,219,0.1)",items:s.depresion},
+       {title:"EPISODIO MIXTO",color:"#9B59B6",bg:"rgba(155,89,182,0.1)",items:s.mixto}]
+    : [{title:"HIPOMANÍA (≠ Manía)",color:"#F39C12",bg:"rgba(243,156,18,0.1)",items:s.mania},
+       {title:"DEPRESIÓN BIPOLAR MAYOR",color:"#2980B9",bg:"rgba(41,128,185,0.1)",items:s.depresion},
+       {title:"EPISODIO MIXTO / DISFÓRICO",color:"#8E44AD",bg:"rgba(142,68,173,0.1)",items:s.mixto}];
+  document.getElementById('sintomas-content').innerHTML = `
+    <div class="card"><div class="card-label">PERFIL TEMPORAL</div><div style="overflow-x:auto;">
+    <table class="compare-table"><tbody>
+    ${current===0
+      ? `<tr><td class="row-label">Manía</td><td>≥ 7 días completos</td></tr>
+         <tr><td class="row-label">Depresión</td><td>≥ 2 semanas (promedio 3–6 meses)</td></tr>
+         <tr><td class="row-label">% tiempo depresión</td><td>~32%</td></tr>
+         <tr><td class="row-label">Inicio habitual</td><td>18–25 años</td></tr>
+         <tr><td class="row-label">Psicosis</td><td>Frecuente en manía severa</td></tr>`
+      : `<tr><td class="row-label">Hipomanía</td><td>4–6 días (sin hospitalización)</td></tr>
+         <tr><td class="row-label">Depresión</td><td>≥ 2 semanas (promedio 5 meses)</td></tr>
+         <tr><td class="row-label">% tiempo depresión</td><td>~50–60%</td></tr>
+         <tr><td class="row-label">Inicio habitual</td><td>25–35 años</td></tr>
+         <tr><td class="row-label">Psicosis</td><td>NUNCA en hipomanía</td></tr>`}
+    </tbody></table></div></div>
+    ${sections.map(sec=>`<div class="sym-section">
+      <div class="sym-section-title" style="background:${sec.bg};color:${sec.color}">${sec.title}</div>
+      ${sec.items.map(item=>`<div class="sym-item" style="border-left-color:${sec.color}">
+        <div class="sym-bullet" style="background:${sec.color}"></div>
+        <span class="sym-text">${item}</span></div>`).join('')}</div>`).join('')}
+    <div class="card"><div class="card-label">SÍNTOMAS COGNITIVOS RESIDUALES (EUTIMIA)</div>
+    ${["Déficit en memoria de trabajo y verbal","Velocidad de procesamiento reducida",
+       "Dificultad en funciones ejecutivas (planificación, flexibilidad)",
+       "Disfunción atencional persistente","'Niebla mental' entre episodios",
+       "Impacto funcional laboral en 30–40% en eutimia"].map(item=>`<div class="sym-item" style="border-left-color:${d.color}">
+        <div class="sym-bullet" style="background:${d.color}"></div>
+        <span class="sym-text">${item}</span></div>`).join('')}</div>`;
+}
+
+function renderTratamiento(d) {
+  document.getElementById('tratamiento-content').innerHTML = `
+    <div class="card"><div class="card-label">PRINCIPIOS GENERALES</div>
+    ${["Tratamiento de por vida: el trastorno bipolar es crónico y recurrente",
+       "Objetivo: eutimia sostenida + funcionamiento psicosocial + calidad de vida",
+       "Combinación farmacológica + psicoterapia superior a cualquier monoterapia",
+       "Adherencia farmacológica: el abandono es la causa #1 de recaídas",
+       "Monitoreo periódico de función renal, tiroidea, metabólica y litemia"].map(item=>`
+    <div class="cause-item" style="border-left-color:${d.color};padding:10px 12px;">
+      <span style="font-size:16px;flex-shrink:0;">✓</span>
+      <span style="font-size:13px;color:var(--text2);line-height:1.5;">${item}</span></div>`).join('')}</div>
+    ${d.treatments.map(group=>`
+    <div style="margin:18px 0 6px;font-size:9px;font-family:monospace;letter-spacing:3px;color:var(--muted);">
+      ${group.emoji} ${group.cat}</div>
+    ${group.items.map(t=>`<div class="treat-card">
+      <div class="treat-card-header">
+        <div><div class="treat-category">${t.indication}</div><div class="treat-name">${t.name}</div></div>
+        <span class="evidence-pill" style="background:${t.evidColor}">${t.evidence}</span></div>
+      <div class="treat-body"><span class="treat-emoji">${group.emoji}</span>
+        <div><div class="treat-mech">${t.mech}</div></div></div>
+      <div class="treat-notes" style="border-left-color:${d.color};background:${d.colorLight}">📋 ${t.notes}</div>
+      ${t.warning?`<div class="treat-warning">⚠️ ${t.warning}</div>`:''}</div>`).join('')}`).join('')}
+    <div class="card"><div class="card-label">COMORBILIDADES FRECUENTES</div>
+    ${["Trastorno de ansiedad (60%): ISRS + estabilizador (con cautela en TB-I)",
+       "Abuso de sustancias (40%): prioritario — empeora pronóstico",
+       "TDAH (20%): metilfenidato solo con estabilizador establecido",
+       "Obesidad/síndrome metabólico por psicofármacos: metformina, topiramate",
+       "Hipotiroidismo (25%): levotiroxina — especialmente en cicladores rápidos"].map(item=>`
+    <div class="cause-item" style="border-left-color:${d.color};padding:8px 12px;margin-bottom:6px;">
+      <span style="font-size:14px;flex-shrink:0;">•</span>
+      <span style="font-size:12.5px;color:var(--text2);line-height:1.5;">${item}</span></div>`).join('')}</div>`;
+}
+
+// ─── TAB SWITCH (with localStorage) ─────────────────────────────────────────
+function switchTab(tabId, btn) {
+  localStorage.setItem('lastTab', tabId);
+  document.querySelectorAll('.tab-panel').forEach(p => { p.classList.remove('active'); p.style.display = ''; });
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  if (btn) btn.classList.add('active');
+  // Clear search when switching tabs
+  if (document.getElementById('searchBox').value) clearSearch();
+  window.scrollTo(0, 0);
+}
+
+// ─── CLOSE DROPDOWN ON OUTSIDE CLICK ────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  if (dropdownOpen && !document.getElementById('header').contains(e.target)) {
+    dropdownOpen = false;
+    document.getElementById('dropdown').classList.remove('open');
+    document.getElementById('sel-arrow').textContent = '▼';
+  }
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+buildDropdown();
+renderAll();
+
+// Restore last tab
+const lastTab = localStorage.getItem('lastTab');
+if (lastTab && document.getElementById('tab-' + lastTab)) {
+  switchTab(lastTab, document.getElementById('nav-' + lastTab));
+}
+</script>
+</body>
+</html>

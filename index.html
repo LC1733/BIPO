@@ -295,32 +295,74 @@ let studyCards = [], studyIndex = 0, studyRevealed = false;
 function doSearch(query) {
   query = query.trim().toLowerCase();
   const noResults = document.getElementById('noResults');
+  // Remove previous highlights
+  document.querySelectorAll('.search-highlight').forEach(el => {
+    el.style.outline = '';
+    el.style.boxShadow = '';
+    el.classList.remove('search-highlight');
+  });
   if (!query) {
-    document.querySelectorAll('.brain-item,.cause-item,.sym-item,.treat-card').forEach(el => el.style.display = '');
+    document.querySelectorAll('.brain-item,.cause-item,.sym-item,.treat-card,.card,.neuro-item,.criteria-item').forEach(el => el.style.display = '');
     noResults.style.display = 'none';
+    // Restore normal tab view
+    document.querySelectorAll('.tab-panel').forEach(p => { p.style.display = ''; p.classList.remove('active'); });
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const tab = currentTab || 'causas';
+    const panel = document.getElementById('tab-' + tab);
+    if (panel) panel.classList.add('active');
+    const navBtn = document.getElementById('nav-' + tab);
+    if (navBtn) navBtn.classList.add('active');
     return;
   }
   let found = 0;
-  document.querySelectorAll('.brain-item,.cause-item,.sym-item,.treat-card').forEach(el => {
-    if (el.innerText.toLowerCase().includes(query)) { el.style.display = ''; found++; }
-    else el.style.display = 'none';
+  // Show ALL tab panels while searching
+  document.querySelectorAll('.tab-panel').forEach(p => { p.style.display = 'block'; p.classList.add('active'); });
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.add('active'));
+  // Search through all searchable elements
+  document.querySelectorAll('.brain-item,.cause-item,.sym-item,.treat-card,.card,.neuro-item,.criteria-item').forEach(el => {
+    if (el.innerText.toLowerCase().includes(query)) {
+      el.style.display = '';
+      el.classList.add('search-highlight');
+      el.style.outline = '2px solid var(--active)';
+      el.style.boxShadow = '0 0 12px var(--active-glow)';
+      found++;
+    } else {
+      el.style.display = 'none';
+    }
   });
-  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = found > 0 ? 'block' : '');
   noResults.style.display = found === 0 ? 'block' : 'none';
-  document.getElementById('noResultsTerm').textContent = query;
+  if (found === 0) {
+    document.getElementById('noResultsTerm').textContent = query;
+  }
+  // Scroll to first result
+  if (found > 0) {
+    const first = document.querySelector('.search-highlight');
+    if (first) {
+      setTimeout(() => first.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+    }
+  }
 }
 
 function clearSearch() {
   document.getElementById('searchBox').value = '';
-  doSearch('');
-  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = '');
-  const tab = currentTab || 'causas';
-  const navBtn = document.getElementById('nav-' + tab);
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  // Remove highlights
+  document.querySelectorAll('.search-highlight').forEach(el => {
+    el.style.outline = '';
+    el.style.boxShadow = '';
+    el.classList.remove('search-highlight');
+  });
+  // Show all elements again
+  document.querySelectorAll('.brain-item,.cause-item,.sym-item,.treat-card,.card,.neuro-item,.criteria-item').forEach(el => el.style.display = '');
+  document.getElementById('noResults').style.display = 'none';
+  // Restore tab view
+  document.querySelectorAll('.tab-panel').forEach(p => { p.style.display = ''; p.classList.remove('active'); });
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const tab = currentTab || 'causas';
   const panel = document.getElementById('tab-' + tab);
   if (panel) panel.classList.add('active');
+  const navBtn = document.getElementById('nav-' + tab);
   if (navBtn) navBtn.classList.add('active');
+  var c = document.getElementById('content'); if(c) c.scrollTop = 0;
 }
 
 function toggleStudyMode() {
